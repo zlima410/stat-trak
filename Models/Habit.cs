@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace StatTrak.Models;
 
 public class Habit
@@ -39,5 +37,12 @@ public class Habit
         return Entries.Count(e => e.Date.Year == year &&
                                 e.Date.Month == month &&
                                 e.IsCompleted);
+    }
+
+    public double GetMonthlyCompletionPercentage(int year, int month)
+    {
+        var daysInMonth = DateTime.DaysInMonth(year, month);
+        var completedDays = GetMonthlyCompletionCount(year, month);
+        return (double)completedDays / daysInMonth * 100;
     }
 }
