@@ -33,4 +33,11 @@ public class Habit
 
         return streak;
     }
+
+    public int GetMonthlyCompletionCount(int year, int month)
+    {
+        return Entries.Count(e => e.Date.Year == year &&
+                                e.Date.Month == month &&
+                                e.IsCompleted);
+    }
 }
