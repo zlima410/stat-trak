@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "SBKzf7LG4BS6vwmfrYsCfwcl+WLQT5sENIDcrsaa7ORrLiSNRVThnt9J/O6DyY//nr3cIm+15KNFPcxapvqLJA==",
+  "success": true,
+  "projectFilePath": "/Users/zlima/repos/StatTrak/HabitRPG.Api/HabitRPG.Api.csproj",
+  "expectedPackageFiles": [
+    "/Users/zlima/.nuget/packages/microsoft.aspnetcore.openapi/8.0.0/microsoft.aspnetcore.openapi.8.0.0.nupkg.sha512",
+    "/Users/zlima/.nuget/packages/microsoft.extensions.apidescription.server/6.0.5/microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "/Users/zlima/.nuget/packages/microsoft.openapi/1.4.3/microsoft.openapi.1.4.3.nupkg.sha512",
+    "/Users/zlima/.nuget/packages/swashbuckle.aspnetcore/6.4.0/swashbuckle.aspnetcore.6.4.0.nupkg.sha512",
+    "/Users/zlima/.nuget/packages/swashbuckle.aspnetcore.swagger/6.4.0/swashbuckle.aspnetcore.swagger.6.4.0.nupkg.sha512",
+    "/Users/zlima/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.4.0/swashbuckle.aspnetcore.swaggergen.6.4.0.nupkg.sha512",
+    "/Users/zlima/.nuget/packages/swashbuckle.aspnetcore.swaggerui/6.4.0/swashbuckle.aspnetcore.swaggerui.6.4.0.nupkg.sha512"
+  ],
+  "logs": []
+}

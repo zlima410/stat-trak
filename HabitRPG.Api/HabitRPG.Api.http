@@ -1,0 +1,6 @@
+@HabitRPG.Api_HostAddress = http://localhost:5139
+
+GET {{HabitRPG.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
