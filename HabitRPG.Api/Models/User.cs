@@ -22,5 +22,7 @@ namespace HabitRPG.Api.Models
         public int TotalXP { get; set; } = 0;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public List<Habit> Habits { get; set; } = new();
     }
 }
