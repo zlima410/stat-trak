@@ -1,13 +1,133 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using HabitRPG.Api.Data;
+using HabitRPG.Api.Services;
+using DotNetEnv;
+
+Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var environment = builder.Environment.EnvironmentName;
+
+string connectionString;
+if (environment == "Development")
+{
+    connectionString = Environment.GetEnvironmentVariable("DEV_DATABASE_CONNECTION");
+    if (string.IsNullOrEmpty(connectionString))
+        throw new InvalidOperationException("DEV_DATABASE_CONNECTION environment variable is required for development");
+        
+    Console.WriteLine("Using PostgreSQL database (Neon Dev)");
+}
+else if (environment == "Production")
+{
+    connectionString = Environment.GetEnvironmentVariable("PROD_DATABASE_CONNECTION");
+    if (string.IsNullOrEmpty(connectionString))
+        throw new InvalidOperationException("PROD_DATABASE_CONNECTION environment variable is required for production");
+        
+    Console.WriteLine("Using PostgreSQL database (Neon Prod)");
+}
+else
+{
+    connectionString = Environment.GetEnvironmentVariable("DEV_DATABASE_CONNECTION");
+    if (string.IsNullOrEmpty(connectionString))
+        throw new InvalidOperationException("DEV_DATABASE_CONNECTION environment variable is required for fallback");
+        
+    Console.WriteLine($"Using PostgreSQL database (Neon Dev) for environment: {environment}");
+}
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null);
+        npgsqlOptions.CommandTimeout(30);
+    });
+    
+    if (environment == "Development")
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+});
+
+var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+    ?? builder.Configuration["JwtSettings:SecretKey"];
+
+if (string.IsNullOrEmpty(secretKey))
+{
+    if (environment == "Development")
+    {
+        Console.WriteLine("Warning: No JWT secret key found. Using development fallback.");
+        secretKey = builder.Configuration["JwtSettings:SecretKey"];
+    }
+    else
+    {
+        throw new InvalidOperationException("JWT SecretKey is required for production");
+    }
+}
+
+var jwtIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "HabitRPG.Api";
+var jwtAudience = builder.Configuration["JwtSettings:Audience"] ?? "HabitRPG.Mobile";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactNative", policy =>
+    {
+        if (environment == "Development")
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://www.habitrpg.zlima.dev",
+                    "http://localhost:5139",
+                    "http://localhost:3000",
+                    "http://localhost:8081"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        }
+    });
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -15,30 +135,46 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowReactNative");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
-var summaries = new[]
+using (var scope = app.Services.CreateScope())
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
+    try
+    {
+        Console.WriteLine($"Starting {environment} database operations...");
+        
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var canConnect = await context.Database.CanConnectAsync(cts.Token);
+        Console.WriteLine($"Can connect to database: {canConnect}");
+        
+        if (!canConnect)
+        {
+            throw new InvalidOperationException($"Cannot connect to {environment} database");
+        }
+        
+        Console.WriteLine("Applying migrations to PostgreSQL database...");
+        await context.Database.MigrateAsync(cts.Token);
+        Console.WriteLine($"{environment} database migrations applied successfully");
+        
+        var userCount = await context.Users.CountAsync(cts.Token);
+        Console.WriteLine($"Database verified. User count: {userCount}");
+        
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"{environment} database operation failed: {ex.Message}");
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+        }
+        throw;
+    }
 }
+
+Console.WriteLine("Starting web server...");
+app.Run();
