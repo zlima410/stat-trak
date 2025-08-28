@@ -40,6 +40,7 @@ namespace HabitRPG.Api.Data
                     .HasForeignKey(cl => cl.HabitId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+                // Prevents multiple completions on the same day for daily habits
                 entity.HasIndex(cl => new { cl.HabitId, cl.CompletedAt })
                     .HasDatabaseName("IX_HabitId_CompletedDate");
             });
