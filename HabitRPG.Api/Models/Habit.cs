@@ -26,6 +26,7 @@ namespace HabitRPG.Api.Models
         public bool IsActive { get; set; } = true;
 
         public User User { get; set; }
+        public List<CompletionLog> CompletionLogs { get; set; } = new();
     }
 
     public enum HabitFrequency
