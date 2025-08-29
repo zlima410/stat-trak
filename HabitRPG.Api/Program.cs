@@ -17,7 +17,7 @@ builder.Services.AddProblemDetails(options =>
     options.CustomizeProblemDetails = (context) =>
     {
         context.ProblemDetails.Instance = context.HttpContext.Request.Path;
-        
+
         if (!context.ProblemDetails.Extensions.ContainsKey("traceId"))
         {
             context.ProblemDetails.Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
@@ -26,7 +26,33 @@ builder.Services.AddProblemDetails(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+    });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var environment = builder.Environment.EnvironmentName;
 
@@ -114,6 +140,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGameService, GameService>();
 
 builder.Services.AddCors(options =>
 {
@@ -146,6 +173,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();

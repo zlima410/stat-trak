@@ -23,34 +23,44 @@ namespace HabitRPG.Api.Services
 
         public async Task<AuthResult> RegisterAsync(RegisterRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Username))
+                return new AuthResult { Success = false, Message = "Username is required" };
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                return new AuthResult { Success = false, Message = "Email is required" };
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+                return new AuthResult { Success = false, Message = "Password is required" };
+
+            if (request.Username.Length < 3 || request.Username.Length > 50)
+                return new AuthResult { Success = false, Message = "Username must be between 3 and 50 characters" };
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.Username, @"^[a-zA-Z0-9_-]+$"))
+                return new AuthResult { Success = false, Message = "Username can only contain letters, numbers, hyphens, and underscores" };
+
+            if (!IsValidEmail(request.Email))
+                return new AuthResult { Success = false, Message = "Please provide a valid email address" };
+
+            if (request.Password.Length < 8)
+                return new AuthResult { Success = false, Message = "Password must be at least 8 characters long" };
+
+            if (request.Password.Length > 100)
+                return new AuthResult { Success = false, Message = "Password cannot exceed 100 characters" };
+
             try
             {
-                var existingUser = await _db.Users
-                    .Where(u => u.Email == request.Email || u.Username == request.Username)
-                    .Select(u => new { u.Email, u.Username })
-                    .FirstOrDefaultAsync();
+                if (await _db.Users.AnyAsync(u => u.Email.ToLower() == request.Email.ToLower()))
+                    return new AuthResult { Success = false, Message = "An account with this email already exists" };
 
-                if (existingUser != null)
-                {
-                    if (existingUser.Email == request.Email)
-                        return new AuthResult
-                        {
-                            Success = false,
-                            Message = "User with this email already exists"
-                        };
-
-                    return new AuthResult
-                    {
-                        Success = false,
-                        Message = "Username is already taken"
-                    };
-                }
+                if (await _db.Users.AnyAsync(u => u.Username.ToLower() == request.Username.ToLower()))
+                    return new AuthResult { Success = false, Message = "This username is already taken" };
 
                 var user = new User
                 {
-                    Username = request.Username,
-                    Email = request.Email,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+                    Username = request.Username.Trim(),
+                    Email = request.Email.Trim().ToLower(),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 _db.Users.Add(user);
@@ -61,7 +71,7 @@ namespace HabitRPG.Api.Services
                 return new AuthResult
                 {
                     Success = true,
-                    Message = "Registration successful",
+                    Message = "Registration successful! Welcome to HabitRPG!",
                     Token = token,
                     User = new UserDto
                     {
@@ -74,23 +84,10 @@ namespace HabitRPG.Api.Services
                     }
                 };
             }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database error during registration");
-                return new AuthResult
-                {
-                    Success = false,
-                    Message = "A database error occurred. Please try again later."
-                };
-            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error during registration");
-                return new AuthResult
-                {
-                    Success = false,
-                    Message = "An unexpected error occurred. Please try again later."
-                };
+                _logger.LogError(ex, "Error during user registration");
+                return new AuthResult { Success = false, Message = "An error occurred during registration. Please try again." };
             }
         }
 
@@ -174,6 +171,19 @@ namespace HabitRPG.Api.Services
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
