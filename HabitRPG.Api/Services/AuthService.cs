@@ -41,8 +41,8 @@ namespace HabitRPG.Api.Services
             if (!IsValidEmail(request.Email))
                 return new AuthResult { Success = false, Message = "Please provide a valid email address" };
 
-            if (request.Password.Length < 8)
-                return new AuthResult { Success = false, Message = "Password must be at least 8 characters long" };
+            if (request.Password.Length < 6)
+                return new AuthResult { Success = false, Message = "Password must be at least 6 characters long" };
 
             if (request.Password.Length > 100)
                 return new AuthResult { Success = false, Message = "Password cannot exceed 100 characters" };
