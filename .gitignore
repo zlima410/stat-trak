@@ -1,0 +1,17 @@
+# Secrets and environment files
+.env
+appsettings.Development.json
+appsettings.Production.json
+
+# User secrets
+**/Properties/launchsettings.json
+
+# Database files
+**/Migrations
+*.db
+*.db-shm
+*.db-wal
+
+# Project files
+**/obj
+**/bin

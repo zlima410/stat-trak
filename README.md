@@ -1,3 +1,8 @@
-# StatTrak
-### GitHub Contribution Graph Clone
-#### Made with C# using the MAUI Framework
+# HabitRPG
+
+#### Frontend
+**React-Native**
+#### Backend
+**C#**
+#### Database
+**Neon PostgreSQL**
