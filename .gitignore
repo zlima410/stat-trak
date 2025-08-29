@@ -15,3 +15,8 @@ appsettings.Production.json
 # Project files
 **/obj
 **/bin
+
+# Frontend
+**/node_modules
+**/package-lock.json
+**/package.json

@@ -148,18 +148,19 @@ builder.Services.AddCors(options =>
     {
         if (environment == "Development")
         {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
+            policy.WithOrigins(
+                    "http://localhost:5139",
+                    "http://localhost:3000",
+                    "http://localhost:8081",
+                    "exp://10.0.0.154:8081",
+                    "http://10.0.0.154:8081"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader();
         }
         else
         {
-            policy.WithOrigins(
-                    "https://www.habitrpg.zlima.dev",
-                    "http://localhost:5139",
-                    "http://localhost:3000",
-                    "http://localhost:8081"
-                )
+            policy.WithOrigins("https://www.habitrpg.zlima.dev")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();
