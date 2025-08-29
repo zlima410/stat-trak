@@ -5,8 +5,6 @@ using System.Security.Claims;
 using System.Text;
 using HabitRPG.Api.Data;
 using HabitRPG.Api.Models;
-using BCrypt.Net;
-using Npgsql;
 
 namespace HabitRPG.Api.Services
 {

@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using HabitRPG.Api.Services;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace HabitRPG.Api.Controllers
 {
