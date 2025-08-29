@@ -1,6 +1,12 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
-import * as SecureStore from 'expo-secure-store';
-import { API_CONFIG } from '../index'
+import { API_CONFIG } from '../index';
+import { TokenManager } from './tokenManager';
+import {
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    ApiError
+} from '../types/types';
 
 const api = axios.create({
     baseURL: API_CONFIG.BASE_URL,

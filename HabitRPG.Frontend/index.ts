@@ -3,6 +3,11 @@ import { Platform } from 'react-native';
 
 import App from './App';
 
+export const STORAGE_KEYS = {
+    AUTH_TOKEN: 'habitrpg_auth_token',
+    USER_PREFERENCES: 'habitrpg_user_prefs',
+} as const;
+
 const getApiUrl = () => {
     if (__DEV__) {
         return Platform.OS === 'ios'
