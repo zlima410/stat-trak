@@ -275,9 +275,6 @@ namespace HabitRPG.Api.Services
                 if (habit.CurrentStreak > habit.BestStreak)
                     habit.BestStreak = habit.CurrentStreak;
 
-                if (habit.BestStreak < habit.CurrentStreak)
-                    habit.BestStreak = habit.CurrentStreak;
-
                 habit.LastCompletedAt = DateTime.UtcNow;
 
                 return (true, string.Empty);
