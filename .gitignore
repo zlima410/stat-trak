@@ -16,7 +16,16 @@ appsettings.Production.json
 **/obj
 **/bin
 
-# Frontend
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies
 **/node_modules
 **/package-lock.json
 **/package.json
+
+# Build outputs
+dist/
+build/
+.expo/
