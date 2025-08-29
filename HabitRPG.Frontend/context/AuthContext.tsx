@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { AuthAPI } from '../api/api';
 import { TokenManager } from '../api/tokenManager';
 import { User, LoginRequest, RegisterRequest, ApiError } from '../types/types';
-import { LookupAddress } from 'axios';
 
 interface AuthContextType {
     user: User | null;

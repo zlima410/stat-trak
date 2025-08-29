@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   View,
   Text,
@@ -10,25 +10,79 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
 import { colors, spacing, borderRadius, fontSize } from "../constants/theme"
+import { useAuth } from "../context/AuthContext"
+import { RotationGestureHandler } from "react-native-gesture-handler"
 
 interface AuthScreenProps {
   onLogin: () => void
 }
 
 export default function AuthScreen({ onLogin }: AuthScreenProps) {
+  const { login, register, error, isLoading, clearError } = useAuth();
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [username, setUsername] = useState("")
+  
+  useEffect(() => {
+    clearError();
+  }, [isLogin, clearError]);
 
-  const handleSubmit = () => {
-    // TODO: Implement actual authentication
-    onLogin()
-  }
+  const validateForm = () => {
+    if (!email.trim()) {
+        Alert.alert('Error', 'Email is required');
+        return false;
+    }
+
+    if (!email.includes('@')) {
+        Alert.alert('Error', 'Please enter a valid email');
+        return false;
+    }
+
+    if (password.length < 6) {
+        Alert.alert('Error', 'Password must be at least 6 characters');
+        return false;
+    }
+
+    if (!isLogin && !username.trim()) {
+        Alert.alert('Error', 'Username is required');
+        return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+        if (isLogin)
+            await login({ email: email.trim(), password });
+        else 
+            await register({
+                username: username.trim(),
+                email: email.trim(),
+                password
+            });
+
+        onLogin();
+    } catch (error) {
+        console.log("Auth error handled by context");
+    }
+  };
+
+  const switchMode = () => {
+    setIsLogin(!isLogin);
+    setEmail('');
+    setPassword('');
+    setUsername('');
+  };
 
   return (
     <SafeAreaView style={styles.container}>

@@ -8,13 +8,25 @@ export const STORAGE_KEYS = {
     USER_PREFERENCES: 'habitrpg_user_prefs',
 } as const;
 
+const isDevelopment = () => {
+    return (
+        __DEV__ ||
+        process.env.NODE_ENV === 'development' ||
+        process.env.EXPO_PUBLIC_ENV === 'development'
+    );
+};
+
 const getApiUrl = () => {
-    if (__DEV__) {
-        return Platform.OS === 'ios'
-            ? 'http://localhost:5139/api'
-            : 'http://10.0.0.154:5139/api';
+    if (isDevelopment()) {
+        const localIP = process.env.ENV_PUBLIC_LOCAL_IP;
+
+        let apiUrl;
+        if (Platform.OS === 'ios')
+            apiUrl = process.env.EXPO_PUBLIC_API_URL_DEV;
+        else
+            apiUrl = process.env.EXPO_PUBLIC_API_URL_DEV_IP || `http://${localIP}:5139/api`;
     } else {
-        return 'https://habitrpg.zlima.dev/api';
+        return process.env.EXPO_PUBLIC_API_URL_PROD;
     }
 };
 

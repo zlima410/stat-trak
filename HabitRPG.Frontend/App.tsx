@@ -1,43 +1,45 @@
-"use client"
+"use client";
 
-import React from "react"
-import { NavigationContainer } from "@react-navigation/native"
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
-import { createStackNavigator } from "@react-navigation/stack"
-import { StatusBar } from "expo-status-bar"
-import { Ionicons } from "@expo/vector-icons"
-import { SafeAreaProvider } from "react-native-safe-area-context"
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ActivityIndicator, View, Text } from "react-native";
 
-import AuthScreen from "./screens/AuthScreen"
-import DashboardScreen from "./screens/DashboardScreen"
-import HabitsScreen from "./screens/HabitsScreen"
-import StatsScreen from "./screens/StatsScreen"
-import ProfileScreen from "./screens/ProfileScreen"
-import { colors } from "./constants/theme"
+import AuthScreen from "./screens/AuthScreen";
+import DashboardScreen from "./screens/DashboardScreen";
+import HabitsScreen from "./screens/HabitsScreen";
+import StatsScreen from "./screens/StatsScreen";
+import ProfileScreen from "./screens/ProfileScreen";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { colors } from "./constants/theme";
 
-const Tab = createBottomTabNavigator()
-const Stack = createStackNavigator()
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap
+          let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === "Dashboard") {
-            iconName = focused ? "home" : "home-outline"
+            iconName = focused ? "home" : "home-outline";
           } else if (route.name === "Habits") {
-            iconName = focused ? "checkmark-circle" : "checkmark-circle-outline"
+            iconName = focused ? "checkmark-circle" : "checkmark-circle-outline";
           } else if (route.name === "Stats") {
-            iconName = focused ? "stats-chart" : "stats-chart-outline"
+            iconName = focused ? "stats-chart" : "stats-chart-outline";
           } else if (route.name === "Profile") {
-            iconName = focused ? "person" : "person-outline"
+            iconName = focused ? "person" : "person-outline";
           } else {
-            iconName = "help-outline"
+            iconName = "help-outline";
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
@@ -60,26 +62,56 @@ function MainTabs() {
       <Tab.Screen name="Stats" component={StatsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
-  )
+  );
+}
+
+function AppContent() {
+  const { isAuthenticated, isInitialized } = useAuth();
+
+  if (!isInitialized) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text
+          style={{
+            color: colors.textSecondary,
+            marginTop: 16,
+            fontSize: 16,
+          }}
+        >
+          Loading...
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <StatusBar style="light" backgroundColor={colors.background} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!isAuthenticated ? (
+          <Stack.Screen name="Auth">{(props) => <AuthScreen {...props} onLogin={() => {}} />}</Stack.Screen>
+        ) : (
+          <Stack.Screen name="Main" component={MainTabs} />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false)
-
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="light" backgroundColor={colors.background} />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {!isAuthenticated ? (
-            <Stack.Screen name="Auth">
-              {(props) => <AuthScreen {...props} onLogin={() => setIsAuthenticated(true)} />}
-            </Stack.Screen>
-          ) : (
-            <Stack.Screen name="Main" component={MainTabs} />
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </SafeAreaProvider>
-  )
+  );
 }
