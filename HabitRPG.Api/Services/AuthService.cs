@@ -6,6 +6,7 @@ using System.Text;
 using HabitRPG.Api.Data;
 using HabitRPG.Api.Models;
 using BCrypt.Net;
+using Npgsql;
 
 namespace HabitRPG.Api.Services
 {
@@ -13,92 +14,139 @@ namespace HabitRPG.Api.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly IConfiguration _config;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(ApplicationDbContext db, IConfiguration config)
+        public AuthService(ApplicationDbContext db, IConfiguration config, ILogger<AuthService> logger)
         {
             _db = db;
             _config = config;
+            _logger = logger;
         }
 
         public async Task<AuthResult> RegisterAsync(RegisterRequest request)
         {
-            if (await _db.Users.AnyAsync(u => u.Email == request.Email))
+            try
             {
-                return new AuthResult
+                var existingUser = await _db.Users
+                    .Where(u => u.Email == request.Email || u.Username == request.Username)
+                    .Select(u => new { u.Email, u.Username })
+                    .FirstOrDefaultAsync();
+
+                if (existingUser != null)
                 {
-                    Success = false,
-                    Message = "User with this email already exists"
-                };
-            }
+                    if (existingUser.Email == request.Email)
+                        return new AuthResult
+                        {
+                            Success = false,
+                            Message = "User with this email already exists"
+                        };
 
-            if (await _db.Users.AnyAsync(u => u.Username == request.Username))
-            {
-                return new AuthResult
-                {
-                    Success = false,
-                    Message = "Username is already taken"
-                };
-            }
-
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
-            };
-
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-
-            var token = GenerateJwtToken(user);
-
-            return new AuthResult
-            {
-                Success = true,
-                Message = "Registration successful",
-                Token = token,
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    Level = user.Level,
-                    XP = user.XP,
-                    TotalXP = user.TotalXP
+                    return new AuthResult
+                    {
+                        Success = false,
+                        Message = "Username is already taken"
+                    };
                 }
-            };
+
+                var user = new User
+                {
+                    Username = request.Username,
+                    Email = request.Email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+                };
+
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+
+                var token = GenerateJwtToken(user);
+
+                return new AuthResult
+                {
+                    Success = true,
+                    Message = "Registration successful",
+                    Token = token,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Username = user.Username,
+                        Email = user.Email,
+                        Level = user.Level,
+                        XP = user.XP,
+                        TotalXP = user.TotalXP
+                    }
+                };
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error during registration");
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = "A database error occurred. Please try again later."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error during registration");
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = "An unexpected error occurred. Please try again later."
+                };
+            }
         }
 
         public async Task<AuthResult> LoginAsync(LoginRequest request)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            try
             {
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+                if (user == null)
+                {
+                    return new AuthResult
+                    {
+                        Success = false,
+                        Message = "Invalid email or password"
+                    };
+                }
+
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                {
+                    return new AuthResult
+                    {
+                        Success = false,
+                        Message = "Invalid email or password"
+                    };
+                }
+
+                var token = GenerateJwtToken(user);
+
+                return new AuthResult
+                {
+                    Success = true,
+                    Message = "Login successful",
+                    Token = token,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Username = user.Username,
+                        Email = user.Email,
+                        Level = user.Level,
+                        XP = user.XP,
+                        TotalXP = user.TotalXP
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during login for email: {Email}", request.Email);
                 return new AuthResult
                 {
                     Success = false,
-                    Message = "Invalid email or password"
+                    Message = "An error occurred during login. Please try again later."
                 };
             }
-
-            var token = GenerateJwtToken(user);
-
-            return new AuthResult
-            {
-                Success = true,
-                Message = "Login successful",
-                Token = token,
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    Level = user.Level,
-                    XP = user.XP,
-                    TotalXP = user.TotalXP
-                }
-            };
         }
 
         public string GenerateJwtToken(User user)

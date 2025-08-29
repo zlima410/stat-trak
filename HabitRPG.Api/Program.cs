@@ -11,6 +11,20 @@ Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = (context) =>
+    {
+        context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+        
+        if (!context.ProblemDetails.Extensions.ContainsKey("traceId"))
+        {
+            context.ProblemDetails.Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
+        }
+    };
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -140,30 +154,32 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+app.UseStatusCodePages();
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    
+
     try
     {
         Console.WriteLine($"Starting {environment} database operations...");
-        
+
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var canConnect = await context.Database.CanConnectAsync(cts.Token);
         Console.WriteLine($"Can connect to database: {canConnect}");
-        
+
         if (!canConnect)
         {
             throw new InvalidOperationException($"Cannot connect to {environment} database");
         }
-        
+
         Console.WriteLine("Applying migrations to PostgreSQL database...");
         await context.Database.MigrateAsync(cts.Token);
         Console.WriteLine($"{environment} database migrations applied successfully");
-        
+
         var userCount = await context.Users.CountAsync(cts.Token);
         Console.WriteLine($"Database verified. User count: {userCount}");
-        
+
     }
     catch (Exception ex)
     {
