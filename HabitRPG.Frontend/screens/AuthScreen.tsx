@@ -17,6 +17,10 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
 import { colors, spacing, borderRadius, fontSize } from "../constants/theme"
 import { useAuth } from "../context/AuthContext"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sword, Shield, Star } from "lucide-react-native";
 
 interface AuthScreenProps {
   onLogin: () => void
@@ -85,68 +89,104 @@ export default function AuthScreen({ onLogin }: AuthScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <Ionicons name="game-controller" size={64} color={colors.primary} />
-            <Text style={styles.title}>HabitRPG 2.0</Text>
-            <Text style={styles.subtitle}>Level up your life through habits</Text>
-          </View>
-
-          <View style={styles.form}>
-            <View style={styles.toggleContainer}>
-              <TouchableOpacity
-                style={[styles.toggleButton, isLogin && styles.toggleButtonActive]}
-                onPress={() => setIsLogin(true)}
-              >
-                <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>Login</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.toggleButton, !isLogin && styles.toggleButtonActive]}
-                onPress={() => setIsLogin(false)}
-              >
-                <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>Register</Text>
-              </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.header}>
+          <View style={styles.logo}>
+            <View style={{ position: "relative" }}>
+              <Shield size={64} color={colors.primary} />
+              <Sword size={32} color={colors.gold} style={styles.logoIcons} />
             </View>
-
-            {!isLogin && (
-              <TextInput
-                style={styles.input}
-                placeholder="Username"
-                placeholderTextColor={colors.textMuted}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-              />
-            )}
-
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={colors.textMuted}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor={colors.textMuted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-              <Text style={styles.submitButtonText}>{isLogin ? "Start Your Quest" : "Create Character"}</Text>
-            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <Text style={styles.title}>HabitRPG 2.0</Text>
+          <Text style={styles.subtitle}>Level up your life, one habit at a time</Text>
+          <View style={styles.stars}>
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={fontSize.md} color={colors.gold} fill={colors.gold} />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity
+            style={[styles.toggleButton, isLogin && styles.toggleButtonActive]}
+            onPress={() => setIsLogin(true)}
+          >
+            <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleButton, !isLogin && styles.toggleButtonActive]}
+            onPress={() => setIsLogin(false)}
+          >
+            <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>Register</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.form}>
+          {!isLogin && (
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              placeholderTextColor={colors.textSecondary}
+            />
+          )}
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            placeholderTextColor={colors.textSecondary}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholderTextColor={colors.textSecondary}
+          />
+          {error ? <Text style={{ color: "red", marginBottom: spacing.sm }}>{error}</Text> : null}
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={isLoading}>
+            {isLoading ? (
+              <ActivityIndicator color={colors.textPrimary} />
+            ) : (
+              <Text style={styles.submitButtonText}>{isLogin ? "Enter the Realm" : "Create Account"}</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity onPress={switchMode} style={{ marginTop: spacing.md }}>
+          <Text style={{ color: colors.primary, textAlign: "center" }}>
+            {isLogin ? "New adventurer? Create your character" : "Already have an account? Login"}
+          </Text>
+        </TouchableOpacity>
+        <View style={{ marginTop: spacing.xl, flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={styles.features}>
+            <View style={styles.star}>
+              <Star size={fontSize.xl} color={colors.primary} />
+            </View>
+            <Text style={{ fontSize: fontSize.sm, color: colors.textSecondary }}>Earn XP</Text>
+          </View>
+          <View style={styles.features}>
+            <View style={styles.shield}>
+              <Shield size={fontSize.xl} color={colors.gold} />
+            </View>
+            <Text style={{ fontSize: fontSize.sm, color: colors.textSecondary }}>Level Up</Text>
+          </View>
+          <View style={styles.features}>
+            <View style={styles.sword}>
+              <Sword size={fontSize.xl} color={colors.fire} />
+            </View>
+            <Text style={{ fontSize: fontSize.sm, color: colors.textSecondary }}>Build Streaks</Text>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -166,11 +206,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing.xxl,
   },
+  logo: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  logoIcons: {
+    position: "absolute",
+    top: -5,
+    right: -3,
+  },
   title: {
     fontSize: fontSize.xxxl,
     fontWeight: "bold",
     color: colors.textPrimary,
     marginTop: spacing.md,
+  },
+  stars: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: spacing.sm,
   },
   subtitle: {
     fontSize: fontSize.md,
@@ -227,4 +283,38 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.textPrimary,
   },
-})
+  features: {
+    alignItems: "center",
+    flex: 1,
+  },
+  star: {
+    width: 32,
+    height: 32,
+    backgroundColor: "rgba(139, 92, 246, 0.2)",
+    borderRadius: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+  shield: {
+    width: 32,
+    height: 32,
+    backgroundColor: "rgba(251, 191, 36, 0.2)",
+    borderRadius: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+  sword: {
+    width: 32,
+    height: 32,
+    backgroundColor: "rgba(249, 115, 22, 0.2)",
+    borderRadius: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+});
