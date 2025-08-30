@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   star: {
     width: 32,
     height: 32,
-    backgroundColor: "rgba(139, 92, 246, 0.2)",
+    backgroundColor: `${colors.primary}33`,
     borderRadius: 64,
     alignItems: "center",
     justifyContent: "center",
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   shield: {
     width: 32,
     height: 32,
-    backgroundColor: "rgba(251, 191, 36, 0.2)",
+    backgroundColor: `${colors.gold}33`,
     borderRadius: 64,
     alignItems: "center",
     justifyContent: "center",
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   sword: {
     width: 32,
     height: 32,
-    backgroundColor: "rgba(249, 115, 22, 0.2)",
+    backgroundColor: `${colors.fire}33`,
     borderRadius: 64,
     alignItems: "center",
     justifyContent: "center",

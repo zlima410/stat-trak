@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Crown, Zap, Flame, Target } from "lucide-react"
+import { Crown, Zap, Flame, Target } from "lucide-react-native"
 import { XPProgressBar } from "@/components/ui/xp-progress-bar"
 
 export function PlayerStats() {

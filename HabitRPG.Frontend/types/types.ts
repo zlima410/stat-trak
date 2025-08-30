@@ -55,6 +55,11 @@ export interface AuthResult {
   user?: User;
 }
 
+// ===== PROFILE UPDATE TYPES =====
+export interface UpdateProfileRequest {
+  username?: string;
+}
+
 // ===== HABIT TYPES =====
 export enum HabitFrequency {
   Daily = 1,
@@ -172,9 +177,5 @@ export interface BulkOperationResult {
 
 // ===== DELETE OPERATION TYPES =====
 export interface PermanentDeleteRequest {
-  confirmationText: string;
-}
-
-export interface DeleteAccountRequest {
   confirmationText: string;
 }
