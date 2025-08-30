@@ -148,13 +148,7 @@ builder.Services.AddCors(options =>
     {
         if (environment == "Development")
         {
-            policy.WithOrigins(
-                    "http://localhost:5139",
-                    "http://localhost:3000",
-                    "http://localhost:8081",
-                    "exp://10.0.0.154:8081",
-                    "http://10.0.0.154:8081"
-                )
+            policy.AllowAnyOrigin()
                 .AllowAnyMethod()
                 .AllowAnyHeader();
         }
@@ -181,11 +175,17 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowReactNative");
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapGet("/health", () => new { 
+    status = "healthy", 
+    timestamp = DateTime.UtcNow,
+    environment = app.Environment.EnvironmentName
+});
 
 app.UseStatusCodePages();
 

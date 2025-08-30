@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
-import { STORAGE_KEYS } from '../index';
+import { STORAGE_KEYS } from '../config';
+import { Platform } from "react-native";
 
 export class TokenManager {
     private static readonly TOKEN_KEY = STORAGE_KEYS.AUTH_TOKEN;
@@ -10,8 +11,9 @@ export class TokenManager {
                 throw new Error('Invalid token provided');
 
             await SecureStore.setItemAsync(this.TOKEN_KEY, token, {
-                keychainService: 'habitrpg_keychain',
-                requireAuthentication: true,
+              keychainService: "habitrpg_keychain",
+              requireAuthentication: true,
+              keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
             });
 
             console.log('🔐 Token stored securely');
@@ -24,8 +26,9 @@ export class TokenManager {
     static async getToken(): Promise<string | null> {
         try {
             const token = await SecureStore.getItemAsync(this.TOKEN_KEY, {
-                keychainService: 'habitrpg_keychain',
-                requireAuthentication: true,
+              keychainService: "habitrpg_keychain",
+              requireAuthentication: true,
+              keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
             });
 
             if (token) {
@@ -66,15 +69,6 @@ export class TokenManager {
         }
     }
 
-    private static isValidJWTFormat(token: string): boolean {
-        try {
-            const parts = token.split('.');
-            return parts.length === 3;
-        } catch {
-            return false;
-        }
-    }
-
     static getTokenPayload(token: string): any | null {
         try {
             const parts = token.split('.');
@@ -84,6 +78,15 @@ export class TokenManager {
             return payload;
         } catch {
             return null;
+        }
+    }
+
+    private static isValidJWTFormat(token: string): boolean {
+        try {
+            const parts = token.split('.');
+            return parts.length === 3;
+        } catch {
+            return false;
         }
     }
 

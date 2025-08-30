@@ -1,5 +1,5 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
-import { API_CONFIG } from '../index';
+import { API_CONFIG } from '../config';
 import { TokenManager } from './tokenManager';
 import {
     AuthResponse,

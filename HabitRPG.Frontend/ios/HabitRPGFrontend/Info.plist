@@ -33,6 +33,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+    <key>NSFaceIDUsageDescription</key>
+    <string>This app uses Face ID/Touch ID to securely store your authentication tokens.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

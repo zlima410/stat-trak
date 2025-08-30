@@ -17,7 +17,6 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
 import { colors, spacing, borderRadius, fontSize } from "../constants/theme"
 import { useAuth } from "../context/AuthContext"
-import { RotationGestureHandler } from "react-native-gesture-handler"
 
 interface AuthScreenProps {
   onLogin: () => void

@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zlima410.HabitRPG.Frontend"
+      "bundleIdentifier": "com.zlima410.HabitRPG.Frontend",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "This app uses Face ID/Touch ID to securely store your authentication tokens."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +30,12 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Allow HabitRPG to access your Face ID biometric data."
+        }
+      ]
     ]
   }
 }
